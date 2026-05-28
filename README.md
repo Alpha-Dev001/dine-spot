@@ -1,4 +1,4 @@
-# Tableau Restaurant Management System
+# Dine spot - Restaurant Management System
 
 A full‑stack **restaurant reservation and management** web application built with **React + Vite** (frontend) and **Express + TypeScript** (backend).  It provides:
 
