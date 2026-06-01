@@ -148,7 +148,7 @@ export default function RestaurantDetailView({ restaurant, onBack, onBookSuccess
           </AnimatePresence>
 
           {/* Tab Navigation selectors */}
-          <div className="flex border-b border-neutral-900 text-xs font-mono tracking-widest uppercase">
+          <div className="flex overflow-x-auto scrollbar-none border-b border-neutral-900 text-xs font-mono tracking-widest uppercase">
             {[
               { id: 'overview', label: 'Culinary Overview', icon: <Compass className="w-3.5 h-3.5" /> },
               { id: 'menu', label: 'Degustation Menu', icon: <BookOpen className="w-3.5 h-3.5" /> },

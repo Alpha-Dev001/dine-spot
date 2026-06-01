@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ViewState, Restaurant, Booking, LiveActivity, FloorAsset } from './types';
 import { INITIAL_BOOKINGS, INITIAL_LIVE_ACTIVITIES, INITIAL_RESTAURANTS } from './data';
+import { ToastProvider, useToast } from './contexts/ToastContext';
 
 import LandingView from './components/LandingView';
 import SignInView from './components/SignInView';
@@ -28,6 +29,7 @@ type StoredOwnerAccount = {
 function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { toast } = useToast();
   const [targetRestaurantId, setTargetRestaurantId] = useState<string>(INITIAL_RESTAURANTS[0]?.id || 'the-monolith');
 
   const apiBaseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/+$/, '');
@@ -41,8 +43,15 @@ function AppContent() {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || `Request failed with status ${response.status}`);
+      let errorMessage = `Request failed with status ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error || errorData.message || JSON.stringify(errorData);
+      } catch {
+        const errorText = await response.text();
+        if (errorText) errorMessage = errorText;
+      }
+      throw new Error(errorMessage);
     }
 
     return response.json() as Promise<T>;
@@ -163,8 +172,11 @@ function AppContent() {
           setHasOwnerAccess(false);
           navigate('/onboarding');
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Unable to persist owner account', error);
+        toast('We could not verify your account details. Please try again.', 'error');
+        setHasOwnerAccess(false);
+        return; // Early return to prevent navigation on error
       }
     } else {
       setHasOwnerAccess(false);
@@ -270,11 +282,14 @@ function AppContent() {
       });
 
       setOwnerAccount(persistedOwnerAccount);
-    } catch (error) {
+      toast('Onboarding complete. Setup synchronized with live grid.', 'success');
+    } catch (error: any) {
       console.error('Failed to persist onboarding data', error);
+      toast('Unable to save your establishment setup. Please review and try again.', 'error');
       setRestaurants(prev => prev.filter(item => item.id !== newRest.id));
       setBookings(prev => prev.filter(item => item.id !== optimisticBooking.id));
       setLiveActivities(prev => prev.filter(item => item.id !== onboardingActivity.id));
+      return; // Stop navigation if sync failed
     }
 
     setHasOwnerAccess(true);
@@ -326,8 +341,10 @@ function AppContent() {
       });
 
       setLiveActivities(prev => prev.map(item => item.id === optimisticActivity.id ? createdActivity : item));
-    } catch (error) {
+      toast('Reservation confirmed and synced to live grid.', 'success');
+    } catch (error: any) {
       console.error('Failed to persist booking activity', error);
+      toast('We could not finalize the reservation at this time. Please try again.', 'warning');
       setBookings(prev => prev.filter(item => item.id !== optimisticBooking.id));
       setLiveActivities(prev => prev.filter(item => item.id !== optimisticActivity.id));
     }
@@ -368,8 +385,10 @@ function AppContent() {
       });
 
       setLiveActivities(prev => prev.map(activity => activity.id === statusActivity.id ? createdActivity : activity));
-    } catch (error) {
+      toast(`Status updated to ${newStatus.toUpperCase()}`, 'success');
+    } catch (error: any) {
       console.error('Failed to update booking status', error);
+      toast('Unable to update the reservation status. Please try again.', 'error');
       setBookings(prev => prev.map(b => b.id === id ? previousBooking : b));
       setLiveActivities(prev => prev.filter(activity => activity.id !== statusActivity.id));
     }
@@ -390,8 +409,10 @@ function AppContent() {
       });
 
       setBookings(prev => prev.map(item => item.id === optimisticBooking.id ? createdBooking : item));
-    } catch (error) {
+      toast('Manual reservation added successfully.', 'success');
+    } catch (error: any) {
       console.error('Failed to add manual booking', error);
+      toast('We could not create the reservation. Please try again.', 'error');
       setBookings(prev => prev.filter(item => item.id !== optimisticBooking.id));
     }
   };
@@ -503,7 +524,9 @@ function AppContent() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AppContent />
+      <ToastProvider>
+        <AppContent />
+      </ToastProvider>
     </BrowserRouter>
   );
 }

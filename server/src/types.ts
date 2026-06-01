@@ -35,6 +35,12 @@ export interface Restaurant {
     coordinates: { lat: number; lng: number };
     popularTimeSlots: string[];
     michelinStar?: number;
+    menu?: {
+        name: string;
+        description: string;
+        price: number;
+        pairing?: string;
+    }[];
 }
 
 export interface OwnerDashboardData {

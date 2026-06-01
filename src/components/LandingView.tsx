@@ -25,10 +25,8 @@ export default function LandingView({ restaurants, onNavigate }: LandingViewProp
           className="fixed left-1/2 top-4 z-50 w-[calc(100%-2rem)] max-w-6xl -translate-x-1/2 flex items-center justify-between rounded-[30px] border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-xl shadow-[0_20px_70px_-30px_rgba(0,0,0,0.95)] md:px-6"
         >
           <a href="#landing-hero" className="flex items-center space-x-3 hover:opacity-90 transition-opacity">
-            <div className="flex items-center justify-center w-8 h-8 rounded-md border border-orange-300/30 bg-orange-300/10 shadow-[0_0_20px_rgba(249,185,93,0.18)]">
-              <span className="font-serif text-sm font-semibold tracking-[0.18em] text-orange-200">T</span>
-            </div>
-            <span className="font-serif text-xl tracking-[0.2em] font-light text-orange-300">T A B L E A U</span>
+            <img src="/favicon.svg" alt="Tableau" className="w-8 h-8" />
+            <span className="font-serif text-xl font-light text-orange-300">T A B L E A U</span>
           </a>
           <div className="hidden md:flex items-center space-x-8 text-xs font-mono tracking-widest text-neutral-400">
             <a href="#stats" className="hover:text-orange-300 transition-colors uppercase">Telemetry</a>

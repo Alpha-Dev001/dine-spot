@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, User, Lock, Mail, ChevronRight, CornerDownRight, Heart, Server } from 'lucide-react';
+import { useToast } from '../contexts/ToastContext';
 
 interface SignInProps {
   onSignInSuccess: (
@@ -20,9 +21,9 @@ const CINEMATIC_QUOTES = [
 export default function SignInView({ onSignInSuccess, onBack }: SignInProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const [quoteIndex, setQuoteIndex] = useState(0);
+  const { toast } = useToast();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -33,32 +34,16 @@ export default function SignInView({ onSignInSuccess, onBack }: SignInProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMsg('');
 
     if (!email || !password) {
-      setErrorMsg(authMode === 'signup'
+      toast(authMode === 'signup'
         ? 'Create an owner account with an email and password before continuing.'
-        : 'All security fields must be compiled.');
+        : 'All security fields must be compiled.', 'warning');
       return;
     }
 
     onSignInSuccess('owner', authMode === 'signin' ? 'dashboard' : 'onboarding', { email, password });
   };
-
-  const handleQuickKey = (type: 'account' | 'onboard') => {
-    if (type === 'onboard') {
-      setAuthMode('signup');
-      setEmail('owner-new@tableau.com');
-      setPassword('tableau101');
-      onSignInSuccess('owner', 'onboarding', { email: 'owner-new@tableau.com', password: 'tableau101' });
-    } else {
-      setAuthMode('signin');
-      setEmail('owner@tableau.com');
-      setPassword('securepass');
-      onSignInSuccess('owner', 'dashboard', { email: 'owner@tableau.com', password: 'securepass' });
-    }
-  };
-
   return (
     <div id="signin-root" className="h-screen overflow-hidden bg-neutral-950 text-neutral-100 flex flex-col md:flex-row font-sans">
 
@@ -78,7 +63,10 @@ export default function SignInView({ onSignInSuccess, onBack }: SignInProps) {
             <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
             <span className="uppercase">Return</span>
           </button>
-          <span className="font-mono text-[9px] tracking-[0.3em] text-neutral-600 uppercase">SYS SECURE</span>
+          <div className="flex items-center space-x-3">
+            <img src="/favicon.svg" alt="Tableau" className="w-8 h-8" />
+            <span className="font-serif text-lg tracking-widest text-orange-300">T A B L E A U</span>
+          </div>
         </div>
 
         {/* Center: Actual Sign-In Core */}
@@ -110,7 +98,6 @@ export default function SignInView({ onSignInSuccess, onBack }: SignInProps) {
               type="button"
               onClick={() => {
                 setAuthMode('signup');
-                setErrorMsg('');
               }}
               className={`py-2 text-[10px] font-mono uppercase tracking-[0.24em] rounded transition-all ${authMode === 'signup'
                 ? 'bg-orange-300 text-neutral-950 font-semibold shadow-[0_0_18px_rgba(249,185,93,0.2)]'
@@ -122,19 +109,13 @@ export default function SignInView({ onSignInSuccess, onBack }: SignInProps) {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {errorMsg && (
-              <div className="p-3.5 bg-red-500/10 border border-red-500/20 text-red-400 rounded text-xs font-mono">
-                {errorMsg}
-              </div>
-            )}
-
             <div className="space-y-2">
               <label className="block text-[10px] font-mono tracking-widest text-neutral-400 uppercase">Email Address</label>
               <div className="relative">
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => { setEmail(e.target.value); setErrorMsg(''); }}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="owner@tableau.com"
                   className="w-full bg-neutral-900 border border-neutral-800 focus:border-orange-300/30 text-xs text-neutral-100 py-3.5 pl-10 pr-4 rounded-md focus:outline-none placeholder-neutral-600 font-mono tracking-wide transition-colors"
                   required
@@ -152,7 +133,7 @@ export default function SignInView({ onSignInSuccess, onBack }: SignInProps) {
                 <input
                   type="password"
                   value={password}
-                  onChange={(e) => { setPassword(e.target.value); setErrorMsg(''); }}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
                   className="w-full bg-neutral-900 border border-neutral-800 focus:border-orange-300/30 text-xs text-neutral-100 py-3.5 pl-10 pr-4 rounded-md focus:outline-none placeholder-neutral-600 transition-colors"
                   required
@@ -169,29 +150,6 @@ export default function SignInView({ onSignInSuccess, onBack }: SignInProps) {
             </button>
           </form>
 
-          {/* Quick Setup shortcuts - perfect for prompt requirements */}
-          <div className="p-4 bg-neutral-900/50 border border-neutral-900 rounded space-y-3">
-            <span className="font-mono text-[9px] tracking-widest text-neutral-500 uppercase flex items-center gap-1.5">
-              <CornerDownRight className="w-3 h-3 text-orange-300" />
-              Quick Sandbox Testing Credentials
-            </span>
-            <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
-              <button
-                onClick={() => handleQuickKey('account')}
-                className="p-2 border border-neutral-800 hover:border-orange-300/30 text-neutral-300 hover:text-orange-300 rounded text-left transition-colors"
-              >
-                <div className="font-bold text-orange-300/90 hover:text-orange-200">Returning Owner</div>
-                <div>Sign in to the live dashboard</div>
-              </button>
-              <button
-                onClick={() => handleQuickKey('onboard')}
-                className="p-2 border border-neutral-800 hover:border-orange-300/30 text-neutral-300 hover:text-orange-300 rounded text-left transition-colors"
-              >
-                <div className="font-bold text-orange-300/90 hover:text-orange-200">New Owner</div>
-                <div>Begin onboarding immediately</div>
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Lower System Indicator */}

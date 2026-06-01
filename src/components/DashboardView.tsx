@@ -279,8 +279,8 @@ export default function DashboardView({
       <aside className="hidden lg:flex my-4 ml-4 h-[calc(100%-2rem)] flex-col justify-between w-72 rounded-[26px] border border-[#2b241f]/70 bg-[#070707]/70 backdrop-blur-xl p-6 shrink-0 z-20 overflow-hidden shadow-[0_25px_80px_-35px_rgba(0,0,0,0.95)]">
         <div className="space-y-8">
           <div className="flex items-center space-x-3">
-            <span className="font-mono text-[9px] tracking-[0.3em] text-neutral-500 uppercase">SUITE</span>
-            <span className="font-serif text-lg tracking-[0.2em] font-light text-orange-300">T A B L E A U</span>
+            <img src="/favicon.svg" alt="Tableau" className="w-8 h-8" />
+            <span className="font-serif text-lg font-light text-orange-300">T A B L E A U</span>
           </div>
 
           <div className="space-y-6">
@@ -349,13 +349,14 @@ export default function DashboardView({
       </aside>
 
       {/* PRIMARY CONTROLLER REGION */}
-      <div className="my-4 mr-4 flex-1 flex flex-col min-w-0 overflow-y-auto rounded-[26px] bg-[#030303]/25">
+      <div className="m-4 lg:m-0 lg:my-4 lg:mr-4 flex-1 flex flex-col min-w-0 overflow-y-auto rounded-[26px] bg-[#030303]/25">
 
         {/* TOP COMMAND BAR HEADER */}
-        <header className="mx-4 mt-4 px-6 py-4 rounded-[22px] border border-[#2b241f]/60 bg-[#070707]/70 backdrop-blur-xl shadow-[0_20px_60px_-32px_rgba(0,0,0,0.95)] flex flex-col sm:flex-row gap-4 justify-between items-center sticky top-3 z-10">
+        <header className="mx-4 mt-4 px-4 sm:px-6 py-4 rounded-[22px] border border-[#2b241f]/60 bg-[#070707]/70 backdrop-blur-xl shadow-[0_20px_60px_-32px_rgba(0,0,0,0.95)] flex flex-col sm:flex-row gap-4 justify-between items-center sticky top-3 z-10">
 
           <div className="flex items-center space-x-3.5 w-full sm:w-auto">
             {/* Mobile/tablet Title fallback badge */}
+            <img src="/favicon.svg" alt="Tableau" className="lg:hidden w-7 h-7" />
             <span className="lg:hidden font-serif text-md tracking-wider text-orange-300 mr-2">T A B L E A U</span>
             <div className="inline-flex items-center space-x-2 px-2.5 py-1 bg-orange-400/10 border border-orange-300/20 text-orange-300 text-[10px] font-mono tracking-widest uppercase rounded-full">
               <span className="w-1.5 h-1.5 rounded-full bg-orange-300 animate-pulse" />
@@ -398,8 +399,49 @@ export default function DashboardView({
           </div>
         </header>
 
+        {/* MOBILE NAVIGATION TABS (Visible only < lg) */}
+        <div className="lg:hidden mx-4 mt-4 overflow-x-auto scrollbar-none rounded-xl border border-[#2b241f]/60 bg-[#070707]/70 backdrop-blur-xl shrink-0">
+          <div className="flex px-2 py-2 gap-2 min-w-max">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`flex items-center space-x-2 text-[10px] font-mono uppercase tracking-widest px-3 py-2 rounded-md transition-all ${activeTab === 'overview' ? 'bg-orange-300 text-[#251b14] font-bold' : 'text-[#a38d7d] hover:text-[#fffaf5] hover:bg-[#14110f]'}`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5 shrink-0" />
+              <span>Overview</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('reservations')}
+              className={`flex items-center space-x-2 text-[10px] font-mono uppercase tracking-widest px-3 py-2 rounded-md transition-all ${activeTab === 'reservations' ? 'bg-orange-300 text-[#251b14] font-bold' : 'text-[#a38d7d] hover:text-[#fffaf5] hover:bg-[#14110f]'}`}
+            >
+              <CalendarRange className="w-3.5 h-3.5 shrink-0" />
+              <span>Reservations</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('insights')}
+              className={`flex items-center space-x-2 text-[10px] font-mono uppercase tracking-widest px-3 py-2 rounded-md transition-all ${activeTab === 'insights' ? 'bg-orange-300 text-[#251b14] font-bold' : 'text-[#a38d7d] hover:text-[#fffaf5] hover:bg-[#14110f]'}`}
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5 shrink-0" />
+              <span>Insights</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('builder')}
+              className={`flex items-center space-x-2 text-[10px] font-mono uppercase tracking-widest px-3 py-2 rounded-md transition-all ${activeTab === 'builder' ? 'bg-orange-300 text-[#251b14] font-bold' : 'text-[#a38d7d] hover:text-[#fffaf5] hover:bg-[#14110f]'}`}
+            >
+              <Sliders className="w-3.5 h-3.5 shrink-0" />
+              <span>Builder</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('rules')}
+              className={`flex items-center space-x-2 text-[10px] font-mono uppercase tracking-widest px-3 py-2 rounded-md transition-all ${activeTab === 'rules' ? 'bg-orange-300 text-[#251b14] font-bold' : 'text-[#a38d7d] hover:text-[#fffaf5] hover:bg-[#14110f]'}`}
+            >
+              <Settings className="w-3.5 h-3.5 shrink-0" />
+              <span>Rules</span>
+            </button>
+          </div>
+        </div>
+
         {/* DYNAMIC VIEW SHEETS */}
-        <main className="p-6 space-y-8 max-w-7xl w-full mx-auto">
+        <main className="p-4 sm:p-6 space-y-6 sm:space-y-8 max-w-7xl w-full mx-auto">
 
           <AnimatePresence mode="wait">
             {activeTab === 'overview' && (

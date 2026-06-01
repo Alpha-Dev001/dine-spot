@@ -44,6 +44,7 @@ export interface Restaurant {
   coordinates: { lat: number; lng: number };
   popularTimeSlots: string[];
   michelinStar?: number;
+  menu?: MenuItem[];
 }
 
 export interface Review {

@@ -21,7 +21,16 @@ const restaurantSchema = new Schema<RestaurantType>({
         required: true
     },
     popularTimeSlots: { type: [String], default: [] },
-    michelinStar: Number
+    michelinStar: Number,
+    menu: {
+        type: [{
+            name: { type: String, required: true },
+            description: { type: String, required: true },
+            price: { type: Number, required: true },
+            pairing: { type: String }
+        }],
+        default: []
+    }
 }, {
     timestamps: true
 });

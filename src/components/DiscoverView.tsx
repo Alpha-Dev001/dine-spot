@@ -46,27 +46,14 @@ export default function DiscoverView({ restaurants, onSelectRestaurant, onBack }
       {/* Background ambient gold splash */}
       <div className="absolute top-0 right-1/4 w-[700px] h-[500px] bg-orange-300/3 rounded-full blur-[140px] pointer-events-none" />
 
-      {/* Embedded Top bar header */}
-      <div className="px-4 pt-4">
-        <nav
-          id="discover-nav"
-          className="fixed left-1/2 top-4 z-50 w-[calc(100%-2rem)] max-w-6xl -translate-x-1/2 flex items-center justify-between rounded-[30px] border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-xl shadow-[0_20px_70px_-30px_rgba(0,0,0,0.95)] md:px-6"
+      <div className='fixed ml-4 top-4 z-50 rounded-[30px] border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-xl shadow-[0_20px_70px_-30px_rgba(0,0,0,0.95)]  '>
+        <button
+          onClick={onBack}
+          className="flex items-center space-x-2 text-xs font-mono tracking-widest text-neutral-300 hover:text-orange-300 transition-colors"
         >
-          <button
-            onClick={onBack}
-            className="flex items-center space-x-2 text-xs font-mono tracking-widest text-neutral-300 hover:text-orange-300 transition-colors"
-          >
-            <Compass className="w-4 h-4" />
-            <span className="uppercase">Return to Editorial</span>
-          </button>
-          <div className="flex items-center space-x-3">
-            <span className="font-mono text-[9px] tracking-[0.4em] text-neutral-600 uppercase">EXPLORE MODE</span>
-            <span className="font-serif text-lg tracking-[0.2em] font-light text-orange-300">T A B L E A U</span>
-          </div>
-          <div className="text-right text-[10px] font-mono text-neutral-500 hidden sm:block">
-            <span>PORTAL VERIFIED</span>
-          </div>
-        </nav>
+          <Compass className="w-4 h-4" />
+          <span className="uppercase">Return to Editorial</span>
+        </button>
       </div>
 
       <div className="max-w-7xl mx-auto px-6 pt-28 pb-12 space-y-12">

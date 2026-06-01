@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Compass, Calendar, ArrowRight, Check, Upload, MapPin, Grid, Layers, BarChart, Server, Sparkles, Paintbrush, ShieldCheck } from 'lucide-react';
-import { FloorAsset } from '../types';
+import { FloorAsset, MenuItem } from '../types';
 
 interface OnboardingProps {
   onComplete: (establishmentDetails: {
@@ -9,6 +9,7 @@ interface OnboardingProps {
     cuisine: string;
     color: string;
     assets: FloorAsset[];
+    menu: MenuItem[];
   }) => void;
   onBack: () => void;
 }
@@ -37,6 +38,9 @@ export default function OnboardingView({ onComplete, onBack }: OnboardingProps) 
   // Visual Styling State
   const [selectedColor, setSelectedColor] = useState('orange');
   const [customImageUrl, setCustomImageUrl] = useState(PRESET_BG_IMAGES[0].url);
+
+  // Menu State
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
 
   // Floor Plan Builder State
   const [selectedAssetType, setSelectedAssetType] = useState<'table' | 'booth' | 'bar'>('table');
@@ -144,8 +148,10 @@ export default function OnboardingView({ onComplete, onBack }: OnboardingProps) 
       {/* Onboarding Header */}
       <header className="px-8 py-5 border-b border-neutral-900 bg-neutral-950/80 backdrop-blur-md flex justify-between items-center z-10">
         <div className="flex items-center space-x-3">
+          <img src="/favicon.svg" alt="Tableau" className="w-8 h-8" />
+          <span className="font-serif text-lg tracking-widest text-orange-300">TABLEAU</span>
+          <span className="text-neutral-600">-</span>
           <span className="font-mono text-[9px] tracking-[0.4em] text-neutral-600 uppercase">ONBOARDING SETUP</span>
-          <span className="font-serif text-lg tracking-widest text-orange-300">T A B L E A U</span>
         </div>
         <div className="flex items-center space-x-2">
           {[1, 2, 3, 4, 5].map((s) => (
@@ -422,7 +428,7 @@ export default function OnboardingView({ onComplete, onBack }: OnboardingProps) 
                     <p className="text-[9px] font-mono text-neutral-500 uppercase mt-0.5">{cuisinePhil}</p>
                   </div>
                   <div className={`text-[10px] font-mono uppercase bg-neutral-950 px-2 py-1 rounded inline-block border ${activeTheme.border} ${activeTheme.text}`}>
-                    RESERVED
+                    ACCOUNT
                   </div>
                 </div>
               </div>
@@ -510,7 +516,7 @@ export default function OnboardingView({ onComplete, onBack }: OnboardingProps) 
 
                 <div className="bg-neutral-950 p-4 rounded-lg border border-neutral-900 select-none w-full shadow-inner">
                   {/* Outer Frame with grid boxes */}
-                  <div className="grid grid-cols-12 gap-2 aspect-[12/8] w-full bg-neutral-900/20 p-2.5 rounded border border-neutral-950">
+                  <div className="grid grid-cols-12 gap-1 sm:gap-2 aspect-[12/8] w-full bg-neutral-900/20 p-2.5 rounded border border-neutral-950">
                     {Array.from({ length: 96 }).map((_, i) => {
                       const gridX = i % 12;
                       const gridY = Math.floor(i / 12);
