@@ -9,15 +9,25 @@ interface OnboardingProps {
     cuisine: string;
     color: string;
     assets: FloorAsset[];
-    menu: MenuItem[];
+    menu?: MenuItem[];
+    image: string;
   }) => void;
   onBack: () => void;
 }
 
 const PRESET_BG_IMAGES = [
-  { name: 'Onyx Salon', url: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&q=80&w=400' },
-  { name: 'Ivy Greenhouse', url: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&q=80&w=400' },
-  { name: 'Gilded Velvet', url: 'https://images.unsplash.com/photo-1574096079513-d8259312b785?auto=format&fit=crop&q=80&w=400' }
+  { name: 'Onyx Salon', url: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&q=80&w=800', description: 'Modernist Contemporary' },
+  { name: 'Ivy Greenhouse', url: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&q=80&w=800', description: 'Avant-Garde French' },
+  { name: 'Gilded Velvet', url: 'https://images.unsplash.com/photo-1574096079513-d8259312b785?auto=format&fit=crop&q=80&w=800', description: 'Neo-Tokyo Lounge' },
+  { name: 'Azure Coast', url: 'https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&q=80&w=800', description: 'Mediterranean Marine' },
+  { name: 'Timber & Iron', url: 'https://images.unsplash.com/photo-1560624052-449f5ddf0c31?auto=format&fit=crop&q=80&w=800', description: 'Heritage Steakhouse' },
+  { name: 'Zen Bamboo', url: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&q=80&w=800', description: 'Minimalist Japanese' },
+  { name: 'Tuscan Hearth', url: 'https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?auto=format&fit=crop&q=80&w=800', description: 'Rustic Italian' },
+  { name: 'Bistro Lumineux', url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&q=80&w=800', description: 'Classic Parisian' },
+  { name: 'Verdant Garden', url: 'https://images.unsplash.com/photo-1533777857889-4be7c70b33f7?auto=format&fit=crop&q=80&w=800', description: 'Artisanal Botanical' },
+  { name: 'Ocean Mist', url: 'https://images.unsplash.com/photo-1485963631004-f2f00b1d6606?auto=format&fit=crop&q=80&w=800', description: 'Seafood Grill' },
+  { name: 'Speakeasy Velvet', url: 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&q=80&w=800', description: 'Vintage Mixology' },
+  { name: 'Or Ambré', url: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&q=80&w=800', description: 'Fine Patisserie' }
 ];
 
 export default function OnboardingView({ onComplete, onBack }: OnboardingProps) {
@@ -37,7 +47,10 @@ export default function OnboardingView({ onComplete, onBack }: OnboardingProps) 
 
   // Visual Styling State
   const [selectedColor, setSelectedColor] = useState('orange');
-  const [customImageUrl, setCustomImageUrl] = useState(PRESET_BG_IMAGES[0].url);
+  const [imageSourceMode, setImageSourceMode] = useState<'preset' | 'custom'>('preset');
+  const [selectedPresetUrl, setSelectedPresetUrl] = useState(PRESET_BG_IMAGES[0].url);
+  const [customImageUrlInput, setCustomImageUrlInput] = useState('');
+  const activeImageUrl = imageSourceMode === 'preset' ? selectedPresetUrl : (customImageUrlInput.trim() || PRESET_BG_IMAGES[0].url);
 
   // Menu State
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -126,7 +139,9 @@ export default function OnboardingView({ onComplete, onBack }: OnboardingProps) 
         name: establishmentName,
         cuisine: cuisinePhil,
         color: selectedColor,
-        assets: floorPlan
+        assets: floorPlan,
+        menu: menuItems,
+        image: activeImageUrl
       });
     }
   };
@@ -397,23 +412,80 @@ export default function OnboardingView({ onComplete, onBack }: OnboardingProps) 
                 </div>
               </div>
 
-              {/* Cover Presets selection */}
-              <div className="space-y-3">
-                <span className="block text-[10px] font-mono tracking-widest text-neutral-500 uppercase">Background Cover Presets</span>
-                <div className="grid grid-cols-3 gap-3">
-                  {PRESET_BG_IMAGES.map((img, i) => (
-                    <div
-                      key={i}
-                      onClick={() => setCustomImageUrl(img.url)}
-                      className={`h-20 rounded border overflow-hidden cursor-pointer relative group transition-all ${customImageUrl === img.url ? `${activeTheme.border} border-2` : 'border-neutral-900 grayscale opacity-60 hover:opacity-100 hover:grayscale-0'}`}
+              {/* Cover Presets & Custom Image Selector */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center border-b border-neutral-905 pb-2">
+                  <span className="block text-[10px] font-mono tracking-widest text-neutral-500 uppercase">Establishment Cover Image</span>
+                  <div className="flex space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setImageSourceMode('preset')}
+                      className={`text-[9px] font-mono uppercase tracking-widest px-2.5 py-1 rounded transition-colors ${imageSourceMode === 'preset' ? `${activeTheme.bg} text-neutral-950 font-bold` : 'text-neutral-400 hover:text-neutral-200 bg-neutral-900'}`}
                     >
-                      <img src={img.url} alt={img.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                      <div className="absolute inset-0 bg-neutral-950/40 flex items-end p-1.5 justify-center">
-                        <span className="text-[8px] font-mono tracking-widest text-neutral-100 text-center uppercase">{img.name}</span>
+                      Presets
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setImageSourceMode('custom')}
+                      className={`text-[9px] font-mono uppercase tracking-widest px-2.5 py-1 rounded transition-colors ${imageSourceMode === 'custom' ? `${activeTheme.bg} text-neutral-950 font-bold` : 'text-neutral-400 hover:text-neutral-200 bg-neutral-900'}`}
+                    >
+                      Custom Link
+                    </button>
+                  </div>
+                </div>
+
+                {imageSourceMode === 'preset' ? (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 max-h-56 overflow-y-auto pr-1 scrollbar-thin">
+                    {PRESET_BG_IMAGES.map((img, i) => (
+                      <div
+                        key={i}
+                        onClick={() => setSelectedPresetUrl(img.url)}
+                        className={`h-16 rounded border overflow-hidden cursor-pointer relative group transition-all ${selectedPresetUrl === img.url ? `${activeTheme.border} border-2 scale-[1.02] ${activeTheme.glow}` : 'border-neutral-900 grayscale opacity-60 hover:opacity-100 hover:grayscale-0'}`}
+                      >
+                        <img src={img.url} alt={img.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        <div className="absolute inset-0 bg-neutral-950/60 flex flex-col justify-end p-1">
+                          <span className="text-[7px] font-mono font-bold tracking-wider text-neutral-105 uppercase truncate">{img.name}</span>
+                          <span className="text-[5px] font-mono text-neutral-450 uppercase truncate">{img.description}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-3 font-mono">
+                    <div className="relative">
+                      <input
+                        type="url"
+                        value={customImageUrlInput}
+                        onChange={(e) => setCustomImageUrlInput(e.target.value)}
+                        placeholder="https://images.unsplash.com/photo-... or custom URL"
+                        className="w-full bg-neutral-900 border border-neutral-800 focus:border-orange-300/30 text-xs px-3.5 py-2.5 text-neutral-100 focus:outline-none rounded placeholder-neutral-700"
+                      />
+                    </div>
+                    {/* Live Preview block inside custom link tab */}
+                    <div className="flex gap-3 p-3 bg-neutral-950/40 border border-neutral-900 rounded items-center">
+                      <div className="w-16 h-12 rounded border border-neutral-800 bg-neutral-900 overflow-hidden flex-shrink-0 relative">
+                        {customImageUrlInput.trim() ? (
+                          <img
+                            src={customImageUrlInput}
+                            alt="Live Custom Preview"
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-[8px] text-neutral-600">No Image</div>
+                        )}
+                      </div>
+                      <div className="text-[9px] text-neutral-400 font-light flex-1">
+                        <span className="text-neutral-500 block">Live Preview Node</span>
+                        <span className="truncate block max-w-[240px] text-neutral-400 font-mono">
+                          {customImageUrlInput.trim() || 'Provide a valid image url link above.'}
+                        </span>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                )}
               </div>
 
               {/* Client Ticket Rendering Sample */}
@@ -422,13 +494,18 @@ export default function OnboardingView({ onComplete, onBack }: OnboardingProps) 
                   <span className="text-[10px] font-mono text-neutral-500 uppercase">Portal Mock Preview</span>
                   <span className="w-2 h-2 rounded-full bg-emerald-500" />
                 </div>
-                <div className="flex justify-between items-start font-serif font-light">
-                  <div>
-                    <h3 className="text-sm text-neutral-250 font-normal">{establishmentName}</h3>
-                    <p className="text-[9px] font-mono text-neutral-500 uppercase mt-0.5">{cuisinePhil}</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 rounded overflow-hidden bg-neutral-950 flex-shrink-0 border border-neutral-850">
+                    <img src={activeImageUrl} alt="Preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   </div>
-                  <div className={`text-[10px] font-mono uppercase bg-neutral-950 px-2 py-1 rounded inline-block border ${activeTheme.border} ${activeTheme.text}`}>
-                    ACCOUNT
+                  <div className="flex-1 flex justify-between items-start font-serif font-light">
+                    <div>
+                      <h3 className="text-sm text-neutral-250 font-normal">{establishmentName || 'Your Establishment'}</h3>
+                      <p className="text-[9px] font-mono text-neutral-500 uppercase mt-0.5">{cuisinePhil || 'Cuisine Type'}</p>
+                    </div>
+                    <div className={`text-[10px] font-mono uppercase bg-neutral-950 px-2 py-1 rounded inline-block border ${activeTheme.border} ${activeTheme.text}`}>
+                      ACTIVE
+                    </div>
                   </div>
                 </div>
               </div>

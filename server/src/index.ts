@@ -7,6 +7,7 @@ import restaurantsRouter from './routes/restaurants';
 import bookingsRouter from './routes/bookings';
 import activitiesRouter from './routes/activities';
 import ownersRouter from './routes/owners';
+import customersRouter from './routes/customers';
 import { OwnerAccountModel, hashPassword } from './models/OwnerAccount';
 
 dotenv.config();
@@ -21,6 +22,7 @@ app.use('/api/restaurants', restaurantsRouter);
 app.use('/api/bookings', bookingsRouter);
 app.use('/api/activities', activitiesRouter);
 app.use('/api/owners', ownersRouter);
+app.use('/api/customers', customersRouter);
 
 app.use(errorHandler);
 

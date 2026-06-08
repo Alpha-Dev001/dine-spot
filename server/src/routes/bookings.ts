@@ -6,7 +6,13 @@ const router = Router();
 router.get('/', async (req, res, next) => {
     try {
         const restaurantId = typeof req.query.restaurantId === 'string' ? req.query.restaurantId : undefined;
-        const bookings = await BookingModel.find(restaurantId ? { restaurantId } : {}).sort({ createdAt: -1 });
+        const email = typeof req.query.email === 'string' ? req.query.email : undefined;
+        const filter = {
+            ...(restaurantId ? { restaurantId } : {}),
+            ...(email ? { email } : {})
+        };
+
+        const bookings = await BookingModel.find(filter).sort({ createdAt: -1 });
         res.json(bookings);
     } catch (error) {
         next(error);

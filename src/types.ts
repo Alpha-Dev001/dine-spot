@@ -67,3 +67,10 @@ export interface FloorAsset {
   number: string;
   status: 'available' | 'occupied' | 'reserved';
 }
+
+export interface CustomerAccount {
+  email: string;
+  isAuthenticated: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}

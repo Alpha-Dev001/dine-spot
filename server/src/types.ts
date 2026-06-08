@@ -57,3 +57,10 @@ export interface OwnerAccount {
     isAuthenticated: boolean;
     dashboardData: OwnerDashboardData;
 }
+
+export interface CustomerAccount {
+    email: string;
+    passwordHash: string;
+    passwordSalt: string;
+    isAuthenticated: boolean;
+}

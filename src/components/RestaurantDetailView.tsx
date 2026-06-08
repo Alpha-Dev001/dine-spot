@@ -1,35 +1,38 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  ArrowLeft, Star, Heart, Share2, Compass, ShieldCheck, MapPin, Wine, Calendar, CheckCircle2, ChevronRight, MessageSquare, Award, Clock, Sparkles, BookOpen, ThumbsUp, Search, SlidersHorizontal
+  ArrowLeft, Star, Heart, Share2, Compass, ShieldCheck, MapPin, Wine, Calendar, CheckCircle2, ChevronRight, MessageSquare, Award, Clock, Sparkles, BookOpen, ThumbsUp, Search, SlidersHorizontal, AlertTriangle
 } from 'lucide-react';
 import { Restaurant, MenuItem, Review, Booking } from '../types';
-import { DEGUSTATION_MENU, THE_MONOLITH_REVIEWS } from '../data';
+import { DEGUSTATION_MENU, THE_MONOLITH_REVIEWS, CALENDAR_DATES, INITIAL_DATE_INDEX } from '../data';
+import { displayNameFromEmail } from './CustomerBookingPanel';
+import { useToast } from '../contexts/ToastContext';
 
 interface DetailProps {
   restaurant: Restaurant;
   onBack: () => void;
-  onBookSuccess: (bookingName: string, party: number, hour: string, calendarDate: string) => void;
+  onBookSuccess: (
+    bookingName: string,
+    party: number,
+    hour: string,
+    calendarDate: string,
+    customerEmail?: string,
+    guestNotes?: string
+  ) => void;
+  customerEmail?: string;
+  backLabel?: string;
 }
 
-const CALENDAR_DATES = [
-  { day: 'Thu', date: '28', full: 'Thursday, May 28' },
-  { day: 'Fri', date: '29', full: 'Friday, May 29' },
-  { day: 'Sat', date: '30', full: 'Saturday, May 30' },
-  { day: 'Sun', date: '31', full: 'Sunday, May 31' },
-  { day: 'Mon', date: '01', full: 'Monday, June 1' },
-  { day: 'Tue', date: '02', full: 'Tuesday, June 2' },
-  { day: 'Wed', date: '03', full: 'Wednesday, June 3' }
-];
-
-export default function RestaurantDetailView({ restaurant, onBack, onBookSuccess }: DetailProps) {
+export default function RestaurantDetailView({ restaurant, onBack, onBookSuccess, customerEmail, backLabel }: DetailProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'menu' | 'reviews'>('overview');
 
   // Booking reservation form state
-  const [selectedDateIdx, setSelectedDateIdx] = useState(0);
+  const { toast } = useToast();
+  const [selectedDateIdx, setSelectedDateIdx] = useState(INITIAL_DATE_INDEX);
+  const [dateError, setDateError] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState(restaurant.popularTimeSlots[1] || '19:30');
   const [partySize, setPartySize] = useState(2);
-  const [guestName, setGuestName] = useState('');
+  const [guestName, setGuestName] = useState(customerEmail ? displayNameFromEmail(customerEmail) : '');
   const [guestNotes, setGuestNotes] = useState('');
   const [isFavorited, setIsFavorited] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -38,6 +41,22 @@ export default function RestaurantDetailView({ restaurant, onBack, onBookSuccess
   const [reviewSearch, setReviewSearch] = useState('');
   const [helpfulReviews, setHelpfulReviews] = useState<string[]>([]);
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+
+  const handleDateClick = (idx: number) => {
+    setSelectedDateIdx(idx);
+    if (CALENDAR_DATES[idx].isPast) {
+      setDateError("Error: Choosing a date in the past is not allowed.");
+      toast("Error: Choosing a date in the past is not allowed.", "error");
+    } else {
+      setDateError(null);
+    }
+  };
+
+  useEffect(() => {
+    if (customerEmail) {
+      setGuestName(displayNameFromEmail(customerEmail));
+    }
+  }, [customerEmail]);
 
   // Handle share click indicator
   const handleShare = () => {
@@ -53,14 +72,20 @@ export default function RestaurantDetailView({ restaurant, onBack, onBookSuccess
 
   const submitReservation = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!guestName) return;
+    if (CALENDAR_DATES[selectedDateIdx].isPast) {
+      setDateError("Error: Choosing a date in the past is not allowed.");
+      toast("Error: Choosing a date in the past is not allowed.", "error");
+      throw new Error("Cannot book a date in the past");
+    }
+    const resolvedGuestName = customerEmail ? displayNameFromEmail(customerEmail) : guestName;
+    if (!resolvedGuestName) return;
 
     // Trigger full state alignment on App.tsx Level
-    onBookSuccess(guestName, partySize, selectedTime, CALENDAR_DATES[selectedDateIdx].full);
+    onBookSuccess(resolvedGuestName, partySize, selectedTime, CALENDAR_DATES[selectedDateIdx].full, customerEmail, guestNotes.trim() || undefined);
     setCheckoutModalOpen(false);
 
     // Reset guest form
-    setGuestName('');
+    if (!customerEmail) setGuestName('');
     setGuestNotes('');
   };
 
@@ -90,7 +115,7 @@ export default function RestaurantDetailView({ restaurant, onBack, onBookSuccess
             className="group px-4 py-2.5 bg-neutral-950/80 backdrop-blur rounded-full border border-neutral-850 hover:border-orange-300/30 text-xs font-mono tracking-widest uppercase text-neutral-300 flex items-center space-x-2 transition-all duration-300 pointer-events-auto"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            <span>Discover Grid</span>
+            <span>{backLabel ?? 'Discover Grid'}</span>
           </button>
 
           <div className="flex space-x-3">
@@ -412,7 +437,7 @@ export default function RestaurantDetailView({ restaurant, onBack, onBookSuccess
                 {CALENDAR_DATES.map((cal, i) => (
                   <button
                     key={i}
-                    onClick={() => setSelectedDateIdx(i)}
+                    onClick={() => handleDateClick(i)}
                     className={`p-2 w-12 h-14 rounded flex flex-col items-center justify-between font-mono border text-center transition-all shrink-0 snap-start select-none ${selectedDateIdx === i ? 'bg-orange-300 border-orange-300 text-neutral-950 font-bold shadow-lg' : 'bg-neutral-950 border-neutral-900 text-neutral-400 hover:text-white hover:border-neutral-800'}`}
                   >
                     <span className={`text-[8px] uppercase tracking-wider ${selectedDateIdx === i ? 'text-neutral-900' : 'text-neutral-500'}`}>{cal.day}</span>
@@ -420,6 +445,12 @@ export default function RestaurantDetailView({ restaurant, onBack, onBookSuccess
                   </button>
                 ))}
               </div>
+              {dateError && (
+                <div className="flex items-center gap-2 p-3 rounded-lg border border-red-500/25 bg-red-500/10 text-red-400 text-[10px] font-mono">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  <span>{dateError}</span>
+                </div>
+              )}
             </div>
 
             {/* Time slot selectors */}
@@ -524,17 +555,27 @@ export default function RestaurantDetailView({ restaurant, onBack, onBookSuccess
 
               {/* Secure client checkout inputs form */}
               <form onSubmit={submitReservation} className="space-y-4 font-sans text-xs font-light">
-                <div className="space-y-1.5">
-                  <label className="block text-[9px] font-mono tracking-widest text-neutral-500 uppercase font-bold">Your Account Full Name</label>
-                  <input
-                    type="text"
-                    value={guestName}
-                    onChange={(e) => setGuestName(e.target.value)}
-                    placeholder="e.g. Sandra Bullock"
-                    className="w-full bg-neutral-950 border border-neutral-800 pl-3.5 pr-3 py-3 text-neutral-105 rounded focus:outline-none placeholder-neutral-700 font-mono tracking-wide"
-                    required
-                  />
-                </div>
+                {customerEmail ? (
+                  <div className="p-3 bg-neutral-950 border border-neutral-800 rounded flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-[9px] font-mono tracking-widest text-neutral-500 uppercase font-bold">Reserved for</div>
+                      <div className="text-sm font-serif text-neutral-100 mt-1">{displayNameFromEmail(customerEmail)}</div>
+                    </div>
+                    <div className="text-[10px] font-mono text-neutral-500 truncate max-w-[140px]">{customerEmail}</div>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    <label className="block text-[9px] font-mono tracking-widest text-neutral-500 uppercase font-bold">Your Account Full Name</label>
+                    <input
+                      type="text"
+                      value={guestName}
+                      onChange={(e) => setGuestName(e.target.value)}
+                      placeholder="e.g. Sandra Bullock"
+                      className="w-full bg-neutral-950 border border-neutral-800 pl-3.5 pr-3 py-3 text-neutral-105 rounded focus:outline-none placeholder-neutral-700 font-mono tracking-wide"
+                      required
+                    />
+                  </div>
+                )}
 
                 <div className="space-y-1.5">
                   <label className="block text-[9px] font-mono tracking-widest text-neutral-500 uppercase font-bold">Palette Allergy Preferences (Optional)</label>

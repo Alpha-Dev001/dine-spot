@@ -10,6 +10,8 @@ import OnboardingView from './components/OnboardingView';
 import DashboardView from './components/DashboardView';
 import DiscoverView from './components/DiscoverView';
 import RestaurantDetailView from './components/RestaurantDetailView';
+import CustomerAuthView from './components/CustomerAuthView';
+import CustomerDashboardView from './components/CustomerDashboardView';
 
 const DEFAULT_RESTAURANT_IMAGE = 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&q=80&w=800';
 
@@ -24,6 +26,13 @@ type StoredOwnerAccount = {
   };
   createdAt: string;
   updatedAt: string;
+};
+
+type StoredCustomerAccount = {
+  email: string;
+  isAuthenticated: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 function AppContent() {
@@ -63,6 +72,9 @@ function AppContent() {
   const [ownerAccount, setOwnerAccount] = useState<StoredOwnerAccount | null>(null);
   const [ownerEstablishmentName, setOwnerEstablishmentName] = useState('Owner Dashboard');
   const [hasOwnerAccess, setHasOwnerAccess] = useState(false);
+
+  const [customerAccount, setCustomerAccount] = useState<StoredCustomerAccount | null>(null);
+  const [hasCustomerAccess, setHasCustomerAccess] = useState(false);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -186,11 +198,58 @@ function AppContent() {
     window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
+  const handleCustomerSignIn = async (details: { email: string; password: string }, restaurantId: string) => {
+    try {
+      const authenticated = await apiRequest<StoredCustomerAccount>('/api/customers/login', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: details.email,
+          password: details.password
+        })
+      });
+
+      setCustomerAccount(authenticated);
+      setHasCustomerAccess(true);
+      setTargetRestaurantId(restaurantId);
+      navigate(`/customer/dashboard/${restaurantId}`);
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    } catch (error: any) {
+      console.error('Unable to persist customer login', error);
+      toast('We could not verify your account. Please try again.', 'error');
+      setHasCustomerAccess(false);
+      return;
+    }
+  };
+
+  const handleCustomerSignUp = async (details: { email: string; password: string }, restaurantId: string) => {
+    try {
+      const createdAccount = await apiRequest<StoredCustomerAccount>('/api/customers/signup', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: details.email,
+          password: details.password
+        })
+      });
+
+      setCustomerAccount(createdAccount);
+      setHasCustomerAccess(true);
+      setTargetRestaurantId(restaurantId);
+      navigate(`/customer/dashboard/${restaurantId}`);
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    } catch (error: any) {
+      console.error('Unable to persist customer signup', error);
+      toast(error?.message ? String(error.message) : 'We could not create your account.', 'error');
+      setHasCustomerAccess(false);
+      return;
+    }
+  };
+
   const handleOnboardingComplete = async (details: {
     name: string;
     cuisine: string;
     color: string;
     assets: FloorAsset[];
+    image: string;
   }) => {
     setOwnerEstablishmentName(details.name);
 
@@ -202,8 +261,8 @@ function AppContent() {
       cuisine: details.cuisine,
       rating: 5.0,
       reviewsCount: 1,
-      image: DEFAULT_RESTAURANT_IMAGE,
-      gallery: [DEFAULT_RESTAURANT_IMAGE],
+      image: details.image,
+      gallery: [details.image],
       description: `Newly deployed dining sanctuary: ${details.name}. Specializing in ${details.cuisine}. Crafted customized layouts align.`,
       philosophies: ['Simplicity in action', 'Precision is hospitality art'],
       amenities: ['Private Cellar', 'Chef Table', 'Valet Parking'],
@@ -297,7 +356,14 @@ function AppContent() {
     window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
-  const handleBookSuccess = async (guestName: string, party: number, hour: string, calendarDate: string) => {
+  const handleBookSuccess = async (
+    guestName: string,
+    party: number,
+    hour: string,
+    calendarDate: string,
+    customerEmail?: string,
+    guestNotes?: string
+  ) => {
     const targetRest = restaurants.find(r => r.id === targetRestaurantId) || restaurants[0];
     const restaurantName = targetRest?.name ?? 'selected restaurant';
 
@@ -307,11 +373,14 @@ function AppContent() {
     const optimisticBooking: Booking = {
       id: bookingId,
       guestName,
+      ...(customerEmail ? { email: customerEmail } : {}),
       covers: party,
       tableNo: mockTableNo,
       time: hour,
       status: 'confirmed',
-      specialNotes: `Online checkout entry. Scheduled sequence on ${calendarDate}.`,
+      specialNotes: guestNotes
+        ? `Online checkout entry. Scheduled on ${calendarDate}. Notes: ${guestNotes}`
+        : `Online checkout entry. Scheduled sequence on ${calendarDate}.`,
       restaurantId: targetRestaurantId
     };
 
@@ -342,15 +411,19 @@ function AppContent() {
 
       setLiveActivities(prev => prev.map(item => item.id === optimisticActivity.id ? createdActivity : item));
       toast('Reservation confirmed and synced to live grid.', 'success');
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      if (customerEmail) {
+        navigate(`/customer/dashboard/${targetRestaurantId}`);
+      } else {
+        navigate('/discover');
+      }
+      return;
     } catch (error: any) {
       console.error('Failed to persist booking activity', error);
       toast('We could not finalize the reservation at this time. Please try again.', 'warning');
       setBookings(prev => prev.filter(item => item.id !== optimisticBooking.id));
       setLiveActivities(prev => prev.filter(item => item.id !== optimisticActivity.id));
     }
-
-    navigate('/discover');
-    window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
   const handleUpdateBookingStatus = async (id: string, newStatus: 'seated' | 'confirmed' | 'arriving' | 'canceled') => {
@@ -417,6 +490,26 @@ function AppContent() {
     }
   };
 
+  const handleCustomerLogout = async () => {
+    if (customerAccount?.email) {
+      try {
+        await apiRequest<StoredCustomerAccount>(`/api/customers/${encodeURIComponent(customerAccount.email)}`, {
+          method: 'PATCH',
+          body: JSON.stringify({
+            isAuthenticated: false
+          })
+        });
+      } catch (error) {
+        console.error('Unable to clear customer session', error);
+      }
+    }
+
+    setHasCustomerAccess(false);
+    setCustomerAccount(null);
+    navigate('/discover');
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  };
+
   const activeRestaurant = restaurants.find(r => r.id === targetRestaurantId) || restaurants[0];
 
   const DetailPage = () => {
@@ -435,6 +528,59 @@ function AppContent() {
         restaurant={selectedRestaurant}
         onBack={() => navigate('/discover')}
         onBookSuccess={handleBookSuccess}
+      />
+    );
+  };
+
+  const CustomerAuthPage = () => {
+    const { restaurantId } = useParams<{ restaurantId: string }>();
+    const resolvedRestaurantId = restaurantId || targetRestaurantId;
+
+    useEffect(() => {
+      if (resolvedRestaurantId) setTargetRestaurantId(resolvedRestaurantId);
+    }, [resolvedRestaurantId]);
+
+    if (hasCustomerAccess && customerAccount?.email) {
+      return <Navigate to={`/customer/dashboard/${resolvedRestaurantId}`} replace />;
+    }
+
+    const selectedRestaurant = restaurants.find(r => r.id === resolvedRestaurantId) || activeRestaurant;
+
+    return (
+      <CustomerAuthView
+        restaurantId={resolvedRestaurantId}
+        restaurantName={selectedRestaurant?.name ?? 'Selected Restaurant'}
+        onSignIn={handleCustomerSignIn}
+        onSignUp={handleCustomerSignUp}
+        onBack={() => navigate('/discover')}
+      />
+    );
+  };
+
+  const CustomerDashboardPage = () => {
+    const { restaurantId } = useParams<{ restaurantId: string }>();
+    const resolvedRestaurantId = restaurantId || targetRestaurantId;
+
+    useEffect(() => {
+      if (resolvedRestaurantId) setTargetRestaurantId(resolvedRestaurantId);
+    }, [resolvedRestaurantId]);
+
+    if (!hasCustomerAccess || !customerAccount?.email) {
+      return <Navigate to={`/customer/auth/${resolvedRestaurantId}`} replace />;
+    }
+
+    const selectedRestaurant = restaurants.find(r => r.id === resolvedRestaurantId) || activeRestaurant;
+
+    return (
+      <CustomerDashboardView
+        restaurant={selectedRestaurant}
+        bookings={bookings}
+        customerEmail={customerAccount.email}
+        onBookSuccess={handleBookSuccess}
+        onLogout={handleCustomerLogout}
+        restaurants={restaurants}
+        onSelectRestaurant={(id) => navigate(`/customer/dashboard/${id}`)}
+        onBrowseRestaurants={() => navigate('/discover')}
       />
     );
   };
@@ -509,12 +655,14 @@ function AppContent() {
           element={
             <DiscoverView
               restaurants={restaurants}
-              onSelectRestaurant={(id) => navigate(`/restaurant/${id}`)}
+              onSelectRestaurant={(id) => navigate(`/customer/auth/${id}`)}
               onBack={() => navigate('/')}
             />
           }
         />
         <Route path="/restaurant/:restaurantId" element={<DetailPage />} />
+        <Route path="/customer/auth/:restaurantId" element={<CustomerAuthPage />} />
+        <Route path="/customer/dashboard/:restaurantId" element={<CustomerDashboardPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
